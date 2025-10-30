@@ -20,7 +20,7 @@ from backend.utils.database import get_db, conversations_collection
 from backend.utils.auth import get_current_user
 from backend.services.credit_service import CreditService
 from backend.services.firecrawl_service import FirecrawlService
-from backend.services.claude_service import ClaudeService
+from backend.services.ai_service import AIService
 from backend.config import settings
 import uuid
 import asyncio
@@ -81,7 +81,7 @@ async def crawl_and_create_bot_background(
         db.commit()
 
         # Create bot system prompt using Claude
-        claude = ClaudeService()
+        claude = AIService()
         system_prompt = claude.create_bot_system_prompt(
             crawled_pages,
             bot_name,
@@ -413,7 +413,7 @@ async def test_bot(
         )
 
     # Use Claude to generate response
-    claude = ClaudeService()
+    claude = AIService()
     result = claude.chat(
         system_prompt=bot.claude_system_prompt,
         messages=[{"role": "user", "content": request.message}]
@@ -465,7 +465,7 @@ async def chat_with_bot(
     messages.append({"role": "user", "content": request.message})
 
     # Get response from Claude
-    claude = ClaudeService()
+    claude = AIService()
     result = claude.chat(
         system_prompt=bot.claude_system_prompt,
         messages=messages
