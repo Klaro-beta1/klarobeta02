@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # UPI for manual payments
     UPI_ID: str = "mihirbhut08@okaxis"
 
+    # Demo Mode (uses mock AI when API keys are invalid)
+    DEMO_MODE: bool = True  # Set to False when you have working API keys
+
     class Config:
         env_file = ".env"
         case_sensitive = True
