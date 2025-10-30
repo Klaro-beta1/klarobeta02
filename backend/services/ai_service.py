@@ -154,10 +154,23 @@ Your purpose is to help visitors by answering questions about:
         Returns:
             Dict with 'response' and 'tokens_used'
         """
-        if self.use_openai:
-            return await self.chat_openai(system_prompt, messages, max_tokens)
-        else:
-            return await self.chat_claude(system_prompt, messages, max_tokens)
+        # Use mock service in demo mode
+        if self.demo_mode:
+            return await self.mock_service.chat(system_prompt, messages, max_tokens)
+
+        # Try real AI services
+        try:
+            if self.use_openai:
+                return await self.chat_openai(system_prompt, messages, max_tokens)
+            else:
+                return await self.chat_claude(system_prompt, messages, max_tokens)
+        except Exception as e:
+            print(f"AI Service Error: {e}")
+            print("Falling back to mock service...")
+            # Fallback to mock service if real API fails
+            if not hasattr(self, 'mock_service'):
+                self.mock_service = MockAIService()
+            return await self.mock_service.chat(system_prompt, messages, max_tokens)
 
     def count_tokens_estimate(self, text: str) -> int:
         """Estimate token count for text"""
