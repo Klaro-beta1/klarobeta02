@@ -96,7 +96,30 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 - Email: mihirbhut07@gmail.com
 - Password: mihirthegre@t1
-- Auto-assigned Enterprise plan
+- Auto-assigned Enterprise plan (100 credits)
+- Access to Admin Panel for credit management
+
+## 💎 Managing Credits
+
+### Admin Panel (Easiest Way)
+1. Login as admin
+2. Navigate to "Admin Panel" in sidebar
+3. View all users and their credits
+4. Use quick buttons (+10, +50, +100) to add credits
+5. Or use the form for custom amounts
+
+### Python Script
+```bash
+python add_credits.py mihirbhut07@gmail.com 100
+```
+
+### API Endpoint
+```bash
+curl -X POST http://localhost:8000/api/admin/credits/add \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"user_email": "user@example.com", "credits": 100}'
+```
 
 ## 🎯 Usage
 
