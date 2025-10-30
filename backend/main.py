@@ -28,6 +28,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(bots.router)
+app.include_router(admin.router)
 
 # Serve static files (uploads and widget)
 uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
