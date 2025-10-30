@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     FIRECRAWL_API_KEY: str = "fc-41eadac06fda46b49462525b2b26f7e6"
     CLAUDE_API_KEY: str = "hrp-fPoa-HPMIUpQyfS0xhE3oEKn1a2BrNELjvhH4BkeD1iVYu0J9bVqLmnhGDTh"
 
+    # OpenAI-compatible API (alternative to Claude)
+    OPENAI_API_KEY: Optional[str] = "a23d5ef0e9cf4afca9964bd31058799c.Q3bOHu9GmujrdYPd"
+    OPENAI_BASE_URL: str = "https://api.deepseek.com/v1"  # DeepSeek API endpoint
+
     # Google OAuth
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
