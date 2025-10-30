@@ -1,20 +1,26 @@
 """
 Unified AI Service supporting multiple providers
-Supports: Claude (Anthropic), OpenAI-compatible APIs
+Supports: Claude (Anthropic), OpenAI-compatible APIs, Mock (Demo Mode)
 """
 
 from typing import List, Dict
 from backend.config import settings
+from backend.services.mock_ai_service import MockAIService
 import httpx
 
 
 class AIService:
-    """Service for interacting with AI models (Claude or OpenAI-compatible)"""
+    """Service for interacting with AI models (Claude, OpenAI-compatible, or Mock)"""
 
     def __init__(self):
+        self.demo_mode = settings.DEMO_MODE
         self.claude_key = settings.CLAUDE_API_KEY
         self.openai_key = settings.OPENAI_API_KEY if hasattr(settings, 'OPENAI_API_KEY') else None
         self.openai_base_url = settings.OPENAI_BASE_URL if hasattr(settings, 'OPENAI_BASE_URL') else "https://api.openai.com/v1"
+
+        # Initialize mock service for demo mode
+        if self.demo_mode:
+            self.mock_service = MockAIService()
 
         # Determine which provider to use
         self.use_openai = self._should_use_openai()
