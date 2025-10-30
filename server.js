@@ -17,10 +17,14 @@ const adminRoutes = require('./src/routes/admin');
 const { errorHandler } = require('./src/middleware/errorHandler');
 const { requestLogger } = require('./src/middleware/logger');
 const { validateApiKey } = require('./src/middleware/auth');
+const Database = require('./src/utils/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Initialize database
+const db = new Database(process.env.DATABASE_URL || './database.sqlite');
 
 // Security middleware
 app.use(helmet({
@@ -74,6 +78,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging
 app.use(requestLogger);
+
+// Database middleware
+app.use(db.middleware());
 
 // Serve static files (embed script, assets)
 app.use(express.static('public', {
