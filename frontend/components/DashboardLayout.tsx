@@ -35,6 +35,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 
+  // Add admin link for admin users
+  if (user.email === 'mihirbhut07@gmail.com') {
+    navigation.push({ name: 'Admin Panel', href: '/admin', icon: '👑' });
+  }
+
   const isActive = (href: string) => router.pathname === href;
 
   return (
