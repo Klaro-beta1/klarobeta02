@@ -414,7 +414,7 @@ async def test_bot(
 
     # Use Claude to generate response
     claude = AIService()
-    result = claude.chat(
+    result = await claude.chat(
         system_prompt=bot.claude_system_prompt,
         messages=[{"role": "user", "content": request.message}]
     )
@@ -466,7 +466,7 @@ async def chat_with_bot(
 
     # Get response from Claude
     claude = AIService()
-    result = claude.chat(
+    result = await claude.chat(
         system_prompt=bot.claude_system_prompt,
         messages=messages
     )
