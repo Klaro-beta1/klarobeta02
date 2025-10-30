@@ -1,12 +1,18 @@
 const axios = require('axios');
 const OpenAI = require('openai');
+const MockAiService = require('./mockAiService');
 
 class HybridAiService {
   constructor() {
+    this.mockService = new MockAiService();
+
+    this.hasRealAI = false;
+
     if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your-openai-key-here') {
       this.openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
       });
+      this.hasRealAI = true;
     }
 
     this.firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
@@ -14,6 +20,10 @@ class HybridAiService {
 
     this.glmApiKey = process.env.GLM_API_KEY;
     this.glmBaseUrl = 'https://open.bigmodel.cn/api/paas/v4';
+
+    if (this.glmApiKey && this.glmApiKey !== 'your-glm-key-here') {
+      this.hasRealAI = true;
+    }
 
     this.fallbackResponses = {
       logout: [
@@ -315,9 +325,19 @@ class HybridAiService {
 
   async processQuery(query, url, domContent = null) {
     const startTime = Date.now();
-    
+
     try {
       console.log(`🚀 Processing query: "${query}" for ${url}`);
+
+      if (!this.hasRealAI) {
+        console.log('🎭 Using mock AI service (no API keys configured)');
+        const mockResult = await this.mockService.processQuery(query, url, domContent);
+        return {
+          ...mockResult,
+          mode: 'mock',
+          processingTime: Date.now() - startTime
+        };
+      }
 
       let pageData;
       if (domContent) {
@@ -332,7 +352,7 @@ class HybridAiService {
       }
 
       let aiResponse = null;
-      
+
       if (pageData.success) {
         const systemPrompt = `You are Klaro, a helpful website assistant. Help users navigate websites by providing clear, friendly guidance.
 
@@ -356,7 +376,13 @@ Provide a helpful, conversational response that guides the user to find what the
       }
 
       if (!aiResponse || !aiResponse.success) {
-        aiResponse = this.generateIntelligentFallback(query, pageData);
+        console.log('⚠️ All AI APIs failed, falling back to mock service');
+        const mockResult = await this.mockService.processQuery(query, url, domContent);
+        return {
+          ...mockResult,
+          mode: 'mock-fallback',
+          processingTime: Date.now() - startTime
+        };
       }
 
       const highlight = this.extractRelevantElements(pageData.html || '', query);
@@ -370,6 +396,7 @@ Provide a helpful, conversational response that guides the user to find what the
         steps: steps,
         confidence: confidence,
         processingTime: Date.now() - startTime,
+        mode: 'ai',
         metadata: {
           pageTitle: pageData.title || 'Unknown',
           aiSource: aiResponse.source || 'api',
@@ -382,14 +409,25 @@ Provide a helpful, conversational response that guides the user to find what the
 
     } catch (error) {
       console.error('❌ Query processing error:', error);
-      return {
-        message: "I encountered an error while processing your request. Please try again.",
-        highlight: 'button, a[href], input[type="submit"]',
-        steps: ['Please try your question again'],
-        confidence: 0.1,
-        processingTime: Date.now() - startTime,
-        error: error.message
-      };
+      console.log('🎭 Falling back to mock service due to error');
+      try {
+        const mockResult = await this.mockService.processQuery(query, url, domContent);
+        return {
+          ...mockResult,
+          mode: 'mock-error-fallback',
+          processingTime: Date.now() - startTime
+        };
+      } catch (mockError) {
+        return {
+          message: "I encountered an error while processing your request. Please try again.",
+          highlight: 'button, a[href], input[type="submit"]',
+          steps: ['Please try your question again'],
+          confidence: 0.1,
+          processingTime: Date.now() - startTime,
+          mode: 'error',
+          error: error.message
+        };
+      }
     }
   }
 

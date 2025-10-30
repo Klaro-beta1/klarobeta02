@@ -9,7 +9,19 @@ async function validateApiKey(req, res, next) {
       });
     }
 
-    const client = await req.db.get('clients', '*', { api_key: apiKey });
+    const { data: client, error } = await req.supabase
+      .from('clients')
+      .select('*')
+      .eq('api_key', apiKey)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to validate API key'
+      });
+    }
 
     if (!client) {
       return res.status(401).json({

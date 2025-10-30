@@ -18,14 +18,21 @@ router.post('/query', validateApiKey, async (req, res, next) => {
 
     const result = await aiService.processQuery(query, url, dom);
 
-    await req.db.insert('queries', {
-      client_id: req.client.id,
-      query,
-      url,
-      response: result,
-      confidence: result.confidence,
-      processing_time: result.processingTime
-    });
+    try {
+      await req.supabase.from('queries').insert({
+        client_id: req.client.id,
+        query,
+        url,
+        response: result,
+        confidence: result.confidence,
+        processing_time: result.processingTime,
+        mode: result.mode || 'mock',
+        highlight: result.highlight || null,
+        steps: result.steps || []
+      });
+    } catch (dbError) {
+      console.error('Failed to save query to database:', dbError);
+    }
 
     res.json(result);
   } catch (error) {
@@ -69,6 +76,27 @@ router.get('/ai-health', async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+router.get('/status', async (req, res) => {
+  try {
+    const hasRealAI = aiService.hasRealAI;
+    const mode = hasRealAI ? 'ai' : 'mock';
+
+    res.json({
+      status: 'operational',
+      mode: mode,
+      message: mode === 'mock'
+        ? 'Demo mode: Using pre-programmed responses. Configure API keys to enable real AI.'
+        : 'AI mode: Real AI responses enabled.',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
   }
 });
 
