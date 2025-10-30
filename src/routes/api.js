@@ -18,10 +18,14 @@ router.post('/query', validateApiKey, async (req, res, next) => {
 
     const result = await aiService.processQuery(query, url, dom);
 
-    await req.db.run(
-      'INSERT INTO queries (client_id, query, url, response, confidence, processing_time) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.client.id, query, url, JSON.stringify(result), result.confidence, result.processingTime]
-    );
+    await req.db.insert('queries', {
+      client_id: req.client.id,
+      query,
+      url,
+      response: result,
+      confidence: result.confidence,
+      processing_time: result.processingTime
+    });
 
     res.json(result);
   } catch (error) {
@@ -31,14 +35,22 @@ router.post('/query', validateApiKey, async (req, res, next) => {
 
 router.get('/analytics', validateApiKey, async (req, res, next) => {
   try {
-    const queries = await req.db.all(
-      'SELECT COUNT(*) as total, AVG(confidence) as avgConfidence, AVG(processing_time) as avgProcessingTime FROM queries WHERE client_id = ?',
-      [req.client.id]
-    );
+    const { data, error } = await req.supabase
+      .from('queries')
+      .select('confidence, processing_time')
+      .eq('client_id', req.client.id);
+
+    if (error) throw error;
+
+    const analytics = {
+      total: data.length,
+      avgConfidence: data.reduce((sum, q) => sum + (q.confidence || 0), 0) / (data.length || 1),
+      avgProcessingTime: data.reduce((sum, q) => sum + (q.processing_time || 0), 0) / (data.length || 1)
+    };
 
     res.json({
       client: req.client.domain,
-      analytics: queries[0]
+      analytics
     });
   } catch (error) {
     next(error);

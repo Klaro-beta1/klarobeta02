@@ -23,7 +23,7 @@ router.post('/register', async (req, res, next) => {
       });
     }
 
-    const existing = await req.db.get('SELECT id FROM clients WHERE email = ? OR domain = ?', [email, domain]);
+    const existing = await req.db.get('clients', '*', { email });
     if (existing) {
       return res.status(409).json({
         error: 'Client already exists',
@@ -33,12 +33,14 @@ router.post('/register', async (req, res, next) => {
 
     const apiKey = `klaro_${uuidv4().replace(/-/g, '')}`;
 
-    const result = await req.db.run(
-      'INSERT INTO clients (email, domain, name, api_key, plan, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [email, domain, name, apiKey, plan, 'active']
-    );
-
-    const client = await req.db.get('SELECT * FROM clients WHERE id = ?', [result.lastID]);
+    const client = await req.db.insert('clients', {
+      email,
+      domain,
+      name,
+      api_key: apiKey,
+      plan,
+      status: 'active'
+    });
 
     res.status(201).json({
       message: 'Client registered successfully',

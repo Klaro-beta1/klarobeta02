@@ -9,7 +9,7 @@ async function validateApiKey(req, res, next) {
       });
     }
 
-    const client = await req.db.get('SELECT * FROM clients WHERE api_key = ?', [apiKey]);
+    const client = await req.db.get('clients', '*', { api_key: apiKey });
 
     if (!client) {
       return res.status(401).json({
